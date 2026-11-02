@@ -1,0 +1,2813 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07132e">
+  <title>XEYR Business OS | Executive Administration Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --navy: #07132e;
+      --navy-dark: #04091a;
+      --navy-card: #0b1d42;
+      --navy-card-border: rgba(95, 159, 255, 0.16);
+      --blue: #1465f4;
+      --blue-glow: rgba(20, 101, 244, 0.25);
+      --cyan: #27d4f4;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --ink: #0f172a;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --sidebar-width: 270px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy-dark);
+      color: var(--text-light);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, strong { font-family: 'Manrope', 'DM Sans', sans-serif; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font-family: inherit; }
+
+    /* Layout */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--navy);
+      border-right: 1px solid var(--navy-card-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; bottom: 0; left: 0;
+      z-index: 100;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      width: calc(100% - var(--sidebar-width));
+      background: radial-gradient(circle at 80% 10%, rgba(20, 101, 244, 0.08), transparent 45%), var(--navy-dark);
+    }
+
+    /* Sidebar Header */
+    .sidebar-brand {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--navy-card-border);
+    }
+    .sidebar-brand img { width: 36px; height: 36px; object-fit: contain; }
+    .sidebar-brand strong { font-size: 1.25rem; letter-spacing: 0.12em; color: #fff; line-height: 1; }
+    .sidebar-brand small { display: block; font-size: 0.5rem; letter-spacing: 0.14em; color: var(--cyan); margin-top: 3px; font-weight: 700; }
+
+    /* Nav Links */
+    .nav-section { padding: 18px 14px 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.15em; color: #526b96; text-transform: uppercase; }
+    .sidebar-menu { list-style: none; padding: 0 10px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-item a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: #9ab0d3;
+      font-size: 0.86rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sidebar-item a:hover, .sidebar-item.active a {
+      background: rgba(20, 101, 244, 0.16);
+      color: #fff;
+      border-left: 3px solid var(--cyan);
+    }
+    .sidebar-item .badge {
+      margin-left: auto;
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: rgba(39, 212, 244, 0.15);
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    /* Topbar */
+    .topbar {
+      height: 72px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--navy-card-border);
+      background: rgba(7, 19, 46, 0.85);
+      backdrop-filter: blur(14px);
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 18px; }
+    .mobile-menu-btn { display: none; background: none; border: 1px solid var(--navy-card-border); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; }
+    .page-title { font-size: 1.25rem; font-weight: 800; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+    /* Period Filter */
+    .period-filter {
+      display: flex;
+      align-items: center;
+      background: rgba(11, 29, 66, 0.9);
+      border: 1px solid var(--navy-card-border);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .period-filter select {
+      background: transparent;
+      border: 0;
+      color: #cbd5e1;
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+    .period-filter select option { background: var(--navy); color: #fff; }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      border-radius: 99px;
+      background: rgba(20, 101, 244, 0.12);
+      border: 1px solid rgba(20, 101, 244, 0.28);
+    }
+    .user-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
+    .user-info { font-size: 0.82rem; }
+    .user-info small { display: block; font-size: 0.65rem; color: var(--cyan); }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 9px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.14); }
+
+    .btn-primary {
+      background: linear-gradient(110deg, #1359ed, #147cf3);
+      border: 0;
+      color: #fff;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 18px rgba(20, 101, 244, 0.35);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(20, 101, 244, 0.5); }
+    .btn-danger { background: #e11d48; color: #fff; border: 0; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .btn-success { background: #059669; color: #fff; border: 0; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+
+    /* Content Area */
+    .dashboard-body { padding: 32px; flex: 1; }
+
+    /* Insights Banner */
+    .insights-panel {
+      background: linear-gradient(135deg, rgba(11, 29, 66, 0.95), rgba(7, 19, 46, 0.98));
+      border: 1px solid var(--navy-card-border);
+      border-radius: 18px;
+      padding: 22px 26px;
+      margin-bottom: 28px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    }
+    .insights-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .insights-title {
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .insights-disclaimer {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .insight-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 14px;
+    }
+    .insight-item {
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 4px solid var(--cyan);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .insight-item.warning { border-left-color: var(--amber); background: rgba(245, 158, 11, 0.05); }
+    .insight-item.danger { border-left-color: var(--rose); background: rgba(244, 63, 94, 0.05); }
+    .insight-item.success { border-left-color: var(--emerald); background: rgba(16, 185, 129, 0.05); }
+    .insight-item h4 { font-size: 0.92rem; color: #fff; margin: 0; }
+    .insight-item p { font-size: 0.82rem; color: var(--text-muted); margin: 0; line-height: 1.4; }
+    .insight-action { align-self: flex-start; font-size: 0.75rem; color: var(--cyan); font-weight: 700; cursor: pointer; }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--navy-card);
+      border: 1px solid var(--navy-card-border);
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
+    .kpi-card::after {
+      content: "";
+      position: absolute;
+      top: 0; right: 0; width: 80px; height: 80px;
+      background: radial-gradient(circle, var(--blue-glow), transparent 70%);
+      pointer-events: none;
+    }
+    .kpi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+    .kpi-value { font-size: 1.85rem; font-weight: 800; color: #fff; line-height: 1.1; margin-bottom: 6px; }
+    .kpi-subtext { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+    .kpi-trend-up { color: var(--emerald); font-weight: 700; }
+    .kpi-trend-alert { color: var(--amber); font-weight: 700; }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+      margin-bottom: 30px;
+    }
+    .chart-panel {
+      background: var(--navy-card);
+      border: 1px solid var(--navy-card-border);
+      border-radius: 18px;
+      padding: 22px;
+    }
+    .chart-panel h3 { font-size: 1.05rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .chart-wrapper { position: relative; height: 260px; width: 100%; }
+
+    /* Tables & Card Sections */
+    .section-card {
+      background: var(--navy-card);
+      border: 1px solid var(--navy-card-border);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 30px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .table-responsive { overflow-x: auto; width: 100%; }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      text-align: left;
+    }
+    table.data-table th {
+      padding: 12px 14px;
+      background: rgba(4, 9, 26, 0.6);
+      color: #94a3b8;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--navy-card-border);
+    }
+    table.data-table td {
+      padding: 14px;
+      border-bottom: 1px solid rgba(95, 159, 255, 0.08);
+      color: #e2e8f0;
+      vertical-align: middle;
+    }
+    table.data-table tr:hover td { background: rgba(20, 101, 244, 0.04); }
+
+    /* Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .badge-new { background: rgba(39, 212, 244, 0.15); color: var(--cyan); border: 1px solid rgba(39, 212, 244, 0.3); }
+    .badge-qualified { background: rgba(16, 185, 129, 0.15); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-review { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-rejected { background: rgba(244, 63, 94, 0.15); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-handover { background: rgba(139, 92, 246, 0.18); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
+
+    /* Search & Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      background: rgba(4, 9, 26, 0.7);
+      border: 1px solid var(--navy-card-border);
+      border-radius: 9px;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 0.85rem;
+      min-width: 240px;
+    }
+    .search-input:focus { outline: 2px solid var(--blue); }
+
+    /* Modals & Dialogs */
+    dialog.admin-modal {
+      width: min(800px, 92vw);
+      background: var(--navy);
+      border: 1px solid var(--navy-card-border);
+      border-radius: 20px;
+      color: #fff;
+      padding: 30px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7);
+      margin: auto;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    dialog.admin-modal::backdrop {
+      background: rgba(4, 9, 26, 0.85);
+      backdrop-filter: blur(8px);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--navy-card-border);
+      padding-bottom: 14px;
+    }
+    .modal-close {
+      background: rgba(255, 255, 255, 0.1);
+      border: 0;
+      color: #fff;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+    .modal-body form { display: flex; flex-direction: column; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.8rem; font-weight: 700; color: #94a3b8; }
+    .form-group label span { color: var(--cyan); }
+    .form-group input, .form-group select, .form-group textarea {
+      background: rgba(4, 9, 26, 0.8);
+      border: 1px solid var(--navy-card-border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 0.86rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: 2px solid var(--blue);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* Checklist widget */
+    .checklist-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .checklist-item.passed { border-color: rgba(16, 185, 129, 0.4); }
+    .checklist-item.missing { border-color: rgba(244, 63, 94, 0.4); }
+
+    /* Tab switcher */
+    .tab-nav {
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid var(--navy-card-border);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 0;
+      color: #94a3b8;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: rgba(20, 101, 244, 0.2);
+      color: var(--cyan);
+    }
+
+    /* Toast */
+    .admin-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      padding: 14px 22px;
+      background: #0f172a;
+      border: 1px solid var(--navy-card-border);
+      border-radius: 12px;
+      color: #fff;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      display: none;
+    }
+    .admin-toast.show { display: block; animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* Responsive */
+    @media (max-width: 980px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; width: 100%; }
+      .mobile-menu-btn { display: block; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Executive Authentication Gate Overlay -->
+  <div id="auth-gate-overlay" style="display:none;position:fixed;inset:0;background:rgba(4,9,26,0.94);backdrop-filter:blur(14px);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div style="width:min(440px,94vw);background:var(--navy);border:1px solid var(--navy-card-border);border-radius:22px;padding:36px 30px;box-shadow:0 25px 80px rgba(0,0,0,0.85);display:flex;flex-direction:column;gap:20px;text-align:center;">
+      <div style="display:flex;justify-content:center;align-items:center;gap:14px;">
+        <img src="/static/assets/xeyr-symbol.png" alt="XEYR Logo" style="width:44px;height:44px;object-fit:contain;">
+        <div style="text-align:left;">
+          <strong style="font-size:1.35rem;letter-spacing:0.12em;color:#fff;display:block;line-height:1;">XEYR</strong>
+          <small style="font-size:0.62rem;letter-spacing:0.16em;color:var(--cyan);font-weight:700;">EXECUTIVE ACCESS GATE</small>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:1.18rem;color:#fff;margin-bottom:6px;">Administrator Sign In</h3>
+        <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.45;">Enter authorized XEYR credentials to access business metrics, client workspaces, financial records, and developer handover packages.</p>
+      </div>
+
+      <div id="auth-gate-error" style="display:none;padding:10px 14px;border-radius:8px;background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.3);color:var(--rose);font-size:0.82rem;text-align:left;"></div>
+
+      <form id="auth-gate-form" onsubmit="handleAdminLogin(event)" style="display:flex;flex-direction:column;gap:14px;text-align:left;">
+        <div class="form-group">
+          <label for="auth-gate-username">Username or Staff ID</label>
+          <input type="text" id="auth-gate-username" placeholder="e.g. admin" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="auth-gate-password">Password</label>
+          <input type="password" id="auth-gate-password" placeholder="••••••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" id="auth-gate-btn" class="btn-primary" style="justify-content:center;padding:12px;font-size:0.95rem;margin-top:6px;">
+          <span>🔒</span> Authenticate &amp; Unlock Dashboard
+        </button>
+      </form>
+
+      <div style="border-top:1px solid var(--navy-card-border);padding-top:16px;display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;">
+        <a href="/" style="color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:4px;">← Public Website</a>
+        <a href="/admin/" style="color:var(--cyan);text-decoration:none;">Django Admin Standard →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="/static/assets/xeyr-symbol.png" alt="XEYR Symbol">
+      <div>
+        <strong>XEYR</strong>
+        <small>BUSINESS OS</small>
+      </div>
+    </div>
+
+    <div class="nav-section">Executive &amp; Analytics</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item active"><a href="#view-overview" onclick="switchView('overview')"><span>⌘</span> Overview &amp; BI</a></li>
+      <li class="sidebar-item"><a href="#view-analytics" onclick="switchView('analytics')"><span>📊</span> Business Analytics</a></li>
+      <li class="sidebar-item"><a href="#view-reports" onclick="switchView('reports')"><span>📑</span> CSV Reports &amp; Exports</a></li>
+    </ul>
+
+    <div class="nav-section">CRM &amp; Sales Pipeline</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="#view-enquiries" onclick="switchView('enquiries')"><span>✉</span> Enquiries &amp; CRM <span class="badge" id="badge-enquiries">0</span></a></li>
+      <li class="sidebar-item"><a href="#view-qualified" onclick="switchView('qualified')"><span>✦</span> Qualified Leads</a></li>
+      <li class="sidebar-item"><a href="#view-rejections" onclick="switchView('rejections')"><span>✖</span> Rejection History</a></li>
+    </ul>
+
+    <div class="nav-section">Requirements &amp; Handover</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="#view-requirements" onclick="switchView('requirements')"><span>📝</span> Client Requirements</a></li>
+      <li class="sidebar-item"><a href="#view-assets" onclick="switchView('assets')"><span>🎨</span> Brand Assets &amp; Files</a></li>
+      <li class="sidebar-item"><a href="#view-handover" onclick="switchView('handover')"><span>📦</span> Developer Handover ZIP <span class="badge" style="background:rgba(20,101,244,0.3);color:#fff;">Critical</span></a></li>
+    </ul>
+
+    <div class="nav-section">Engineering &amp; Projects</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="#view-projects" onclick="switchView('projects')"><span>💻</span> Developer Projects</a></li>
+      <li class="sidebar-item"><a href="#view-events-mgmt" onclick="switchView('events-mgmt')"><span>🎪</span> Event Management</a></li>
+      <li class="sidebar-item"><a href="#view-event-payments" onclick="switchView('event-payments')"><span>💳</span> Event Payments &amp; Razorpay</a></li>
+      <li class="sidebar-item"><a href="#view-social-qr" onclick="switchView('social-qr')"><span>📱</span> Social Media &amp; QR Codes</a></li>
+      <li class="sidebar-item"><a href="#view-events" onclick="switchView('events')"><span>🎓</span> Workshops &amp; SkillBridge</a></li>
+      <li class="sidebar-item"><a href="#view-finance" onclick="switchView('finance')"><span>₹</span> Revenue &amp; Invoices</a></li>
+    </ul>
+
+    <div class="nav-section">System &amp; Audit</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="#view-audit" onclick="switchView('audit')"><span>🔒</span> Security &amp; Audit Logs</a></li>
+      <li class="sidebar-item"><a href="/admin/" target="_blank"><span>⚙️</span> Django Admin Portal</a></li>
+      <li class="sidebar-item"><a href="/" target="_blank"><span>↗</span> Public Website</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="page-title" id="view-title">Executive Dashboard &amp; Analytics</div>
+      </div>
+      <div class="topbar-right">
+        <!-- Global Date Range Filter -->
+        <div class="period-filter">
+          <span>📅</span>
+          <select id="global-period-select" onchange="refreshAllData()">
+            <option value="last_30_days">Last 30 Days</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="last_7_days">Last 7 Days</option>
+            <option value="this_week">This Week</option>
+            <option value="last_week">Last Week</option>
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="this_quarter">This Quarter</option>
+            <option value="this_year">This Year</option>
+          </select>
+        </div>
+
+        <div class="user-pill">
+          <div class="user-dot"></div>
+          <div class="user-info">
+            <span id="user-display-name">Admin User</span>
+            <small id="user-display-role">Super Administrator</small>
+          </div>
+        </div>
+
+        <a href="/admin/" target="_blank" class="btn-secondary" style="display:inline-flex;align-items:center;gap:6px;"><span>⚙️</span> Django Admin</a>
+        <button class="btn-secondary" onclick="logoutAdmin()">Logout</button>
+      </div>
+    </header>
+
+    <main class="dashboard-body">
+
+      <!-- View: Overview / Executive Intelligence -->
+      <section id="sec-overview" class="view-section">
+
+        <!-- Rule-Based Business Insights Banner -->
+        <div class="insights-panel">
+          <div class="insights-header">
+            <div class="insights-title">
+              <span>⚡</span> RULE-BASED BUSINESS INSIGHTS
+            </div>
+            <span class="insights-disclaimer">Computed deterministically from stored PostgreSQL records</span>
+          </div>
+          <div class="insight-cards" id="insights-container">
+            <div class="insight-item"><p>Loading business insights...</p></div>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Enquiries</div>
+            <div class="kpi-value" id="kpi-total-enquiries">0</div>
+            <div class="kpi-subtext">Received via website &amp; direct</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Qualified Leads</div>
+            <div class="kpi-value" id="kpi-qualified">0</div>
+            <div class="kpi-subtext"><span class="kpi-trend-up" id="kpi-conv-rate">0%</span> conversion rate</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Pipeline Value</div>
+            <div class="kpi-value" id="kpi-pipeline-val">₹0</div>
+            <div class="kpi-subtext">Estimated qualified scope</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Developer Handover ZIPs</div>
+            <div class="kpi-value" id="kpi-handovers">0</div>
+            <div class="kpi-subtext"><span class="kpi-trend-up">Verified</span> downloadable packages</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Active Dev Projects</div>
+            <div class="kpi-value" id="kpi-active-projects">0</div>
+            <div class="kpi-subtext"><span id="kpi-blocked-projects" class="kpi-trend-alert">0</span> blocked</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Revenue Collected</div>
+            <div class="kpi-value" id="kpi-revenue">₹0</div>
+            <div class="kpi-subtext">Reconciled bank/payment records</div>
+          </div>
+        </div>
+
+        <!-- Interactive Charts Grid -->
+        <div class="charts-grid">
+          <div class="chart-panel">
+            <h3><span>Pipeline &amp; Conversion Funnel</span> <small style="font-size:0.75rem;color:var(--text-muted);">Enquiries to Handover</small></h3>
+            <div class="chart-wrapper"><canvas id="chart-funnel"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <h3><span>Service Demand Breakdown</span> <small style="font-size:0.75rem;color:var(--text-muted);">SolveX vs SkillBridge</small></h3>
+            <div class="chart-wrapper"><canvas id="chart-services"></canvas></div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-panel">
+            <h3><span>Rejection Categories Pareto Analysis</span> <small style="font-size:0.75rem;color:var(--text-muted);">Documented Infeasibility Reasons</small></h3>
+            <div class="chart-wrapper"><canvas id="chart-rejections"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <h3><span>Financial Performance (INR)</span> <small style="font-size:0.75rem;color:var(--text-muted);">Invoiced vs Collected vs Expenses</small></h3>
+            <div class="chart-wrapper"><canvas id="chart-financials"></canvas></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- View: Enquiries & CRM -->
+      <section id="sec-enquiries" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Client Enquiries &amp; CRM Pipeline</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">All submissions stored in PostgreSQL with complete qualification &amp; rejection audit trails.</p>
+            </div>
+            <div class="filter-bar">
+              <input type="text" id="enquiry-search" class="search-input" placeholder="Search client, email, ref..." onkeyup="filterEnquiriesTable()">
+              <select id="enquiry-status-filter" class="search-input" style="min-width:160px;" onchange="loadEnquiries()">
+                <option value="">All Statuses</option>
+                <option value="NEW">New</option>
+                <option value="UNDER_REVIEW">Under Review</option>
+                <option value="CONTACTED">Contacted</option>
+                <option value="QUALIFIED">Qualified</option>
+                <option value="REQUIREMENTS_COMPLETED">Requirements Completed</option>
+                <option value="READY_FOR_HANDOVER">Ready for Handover</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+              <button class="btn-primary" onclick="openCreateEnquiryModal()">+ New Enquiry</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Ref ID</th>
+                  <th>Client / Organisation</th>
+                  <th>Contact Person</th>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Source</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="enquiries-tbody">
+                <tr><td colspan="8" style="text-align:center;">Loading enquiries from database...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Client Requirements Workspace -->
+      <section id="sec-requirements" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Client Requirements Workspaces</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Structured workspaces (Sections A to F) associated with qualified enquiries.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Req Reference</th>
+                  <th>Enquiry Ref</th>
+                  <th>Project Name</th>
+                  <th>Client Legal Name</th>
+                  <th>Status</th>
+                  <th>Quoted / Budget</th>
+                  <th>Version</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="requirements-tbody">
+                <tr><td colspan="8" style="text-align:center;">Loading requirements workspaces...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Brand Assets & File Management -->
+      <section id="sec-assets" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Client Brand Assets &amp; File Management</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Secure private storage, checksum calculation, and completeness checklist.</p>
+            </div>
+            <button class="btn-primary" onclick="openUploadAssetModal()">+ Upload Asset / File</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Asset Title</th>
+                  <th>Project / Req</th>
+                  <th>Category</th>
+                  <th>Filename</th>
+                  <th>Size</th>
+                  <th>SHA256 Hash</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="assets-tbody">
+                <tr><td colspan="8" style="text-align:center;">Loading brand assets...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Developer Handover ZIP Generator -->
+      <section id="sec-handover" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Automated Developer Handover ZIP Generator</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Generates verified developer handover packages with exact folder structures, ReportLab PDFs, and checksum manifests.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Handover Ref</th>
+                  <th>Project Reference</th>
+                  <th>Project Title</th>
+                  <th>Version</th>
+                  <th>ZIP File Size</th>
+                  <th>Assigned Dev</th>
+                  <th>Generated Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="handover-tbody">
+                <tr><td colspan="8" style="text-align:center;">Loading handover packages...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Developer Projects -->
+      <section id="sec-projects" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Developer Projects &amp; Progress Monitoring</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Sprint milestones, progress percentages, blockers, and deliverable verification.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Project Code</th>
+                  <th>Title</th>
+                  <th>Client</th>
+                  <th>Developer</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                  <th>Target Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="projects-tbody">
+                <tr><td colspan="8" style="text-align:center;">Loading projects...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Rejection History & Analytics -->
+      <section id="sec-rejections" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Enquiry Rejection Audit &amp; History</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">All rejected enquiries with mandatory reasons, responsible staff, and reopen capabilities.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Enquiry Ref</th>
+                  <th>Client Name</th>
+                  <th>Category</th>
+                  <th>Detailed Reason</th>
+                  <th>Rejected By</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rejections-tbody">
+                <tr><td colspan="8" style="text-align:center;">Loading rejection records...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Workshops & SkillBridge Applications -->
+      <section id="sec-events" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Event Registrations &amp; SkillBridge Applications</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Public interest registrations from college workshops and professional trainers.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Name / College</th>
+                  <th>Contact Email</th>
+                  <th>Phone</th>
+                  <th>Subject / Profile</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="events-tbody">
+                <tr><td colspan="6" style="text-align:center;">Loading registrations...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Revenue & Financials -->
+      <section id="sec-finance" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Revenue, Invoices &amp; Payments Foundation</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Distinct tracking of quoted, approved, invoiced, received, pending, and refunded amounts.</p>
+            </div>
+            <button class="btn-primary" onclick="openCreateInvoiceModal()">+ Create Invoice / Quote</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Type</th>
+                  <th>Invoiced (INR)</th>
+                  <th>Received (INR)</th>
+                  <th>Pending (INR)</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                </tr>
+              </thead>
+              <tbody id="finance-tbody">
+                <tr><td colspan="7" style="text-align:center;">Loading financial records...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: CSV Reports & Exports -->
+      <section id="sec-reports" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Business Reports &amp; Verified CSV Exports</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Download raw business intelligence data directly from PostgreSQL for executive auditing.</p>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
+            <div style="background:rgba(255,255,255,0.03);padding:24px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <h4>Enquiries Master Export</h4>
+              <p style="font-size:0.82rem;color:var(--text-muted);margin:8px 0 16px;">Complete register of all enquiries, sources, contact details and current statuses.</p>
+              <a href="/api/analytics/export/enquiries/" class="btn-primary" download>Download Enquiries (CSV)</a>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:24px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <h4>Rejections &amp; Infeasibility Audit</h4>
+              <p style="font-size:0.82rem;color:var(--text-muted);margin:8px 0 16px;">Rejection categories, mandatory explanations, responsible staff, and reopen logs.</p>
+              <a href="/api/analytics/export/rejections/" class="btn-primary" download>Download Rejections (CSV)</a>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:24px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <h4>Developer Projects Status</h4>
+              <p style="font-size:0.82rem;color:var(--text-muted);margin:8px 0 16px;">Active sprint progress, milestones, blockers, and expected completion dates.</p>
+              <a href="/api/analytics/export/projects/" class="btn-primary" download>Download Projects (CSV)</a>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:24px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <h4>Financial Audit Export</h4>
+              <p style="font-size:0.82rem;color:var(--text-muted);margin:8px 0 16px;">Invoices, milestones, received collections, and operational expenses.</p>
+              <a href="/api/analytics/export/financials/" class="btn-primary" download>Download Financials (CSV)</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Audit Logs -->
+      <section id="sec-audit" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Security &amp; Audit Trail</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Immutable event logs of status changes, qualifications, rejections, and handover generations.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Entity</th>
+                  <th>Details</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody id="audit-tbody">
+                <tr><td colspan="6" style="text-align:center;">Loading audit logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <!-- View: Central Event Management & Dynamic Forms -->
+      <section id="sec-events-mgmt" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Central Event Management &amp; Dynamic Form Builder</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Create, edit, schedule and archive events. Build dynamic registration forms and notify opted-in subscribers.</p>
+            </div>
+            <button class="btn-primary" onclick="openCreateEventModal()">+ Create New Event</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Event Details</th>
+                  <th>Category</th>
+                  <th>Date &amp; Venue</th>
+                  <th>Pricing &amp; Fee</th>
+                  <th>Status</th>
+                  <th>Capacity / Regs</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="events-mgmt-tbody">
+                <tr><td colspan="7" style="text-align:center;">Loading events...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Event Payments & Razorpay Dashboard -->
+      <section id="sec-event-payments" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Event Payments &amp; Razorpay Gateway Reconciliations</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Real-time verified transactions, refunds, and financial performance calculated from stored database records.</p>
+            </div>
+          </div>
+
+          <!-- Payment KPI Summary Cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:24px;">
+            <div style="background:rgba(255,255,255,0.03);padding:18px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <small style="color:var(--text-muted);font-weight:700;">TOTAL REGISTRATIONS</small>
+              <h3 id="ep-kpi-total-regs" style="font-size:1.6rem;margin-top:6px;color:#fff;">0</h3>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:18px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <small style="color:var(--text-muted);font-weight:700;">CONFIRMED REGISTRATIONS</small>
+              <h3 id="ep-kpi-confirmed" style="font-size:1.6rem;margin-top:6px;color:var(--emerald);">0</h3>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:18px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <small style="color:var(--text-muted);font-weight:700;">VERIFIED PAID ORDERS</small>
+              <h3 id="ep-kpi-paid-orders" style="font-size:1.6rem;margin-top:6px;color:var(--cyan);">0</h3>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:18px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <small style="color:var(--text-muted);font-weight:700;">GROSS REVENUE RECEIVED</small>
+              <h3 id="ep-kpi-gross-rev" style="font-size:1.6rem;margin-top:6px;color:var(--emerald);">₹0</h3>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:18px;border-radius:14px;border:1px solid var(--navy-card-border);">
+              <small style="color:var(--text-muted);font-weight:700;">ACTIVE SUBSCRIBERS</small>
+              <h3 id="ep-kpi-subscribers" style="font-size:1.6rem;margin-top:6px;color:#a78bfa;">0</h3>
+            </div>
+          </div>
+
+          <h4 style="margin-bottom:12px;font-size:1.1rem;">Recent Payment Orders (Razorpay)</h4>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Order Reference</th>
+                  <th>Event</th>
+                  <th>Amount</th>
+                  <th>Razorpay Payment ID</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="event-payments-tbody">
+                <tr><td colspan="6" style="text-align:center;">Loading payment records...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Social Media & QR Codes -->
+      <section id="sec-social-qr" class="view-section" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h3>Official Social Media &amp; Uploaded QR Codes</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">Manage official Instagram, LinkedIn, and social platform URLs and upload genuine, sharp QR code graphics. Hidden platforms are automatically omitted from the website footer.</p>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;" id="social-config-container">
+            <!-- Dynamically populated social media cards -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modals -->
+
+  <!-- Modal: Qualification Workflow (Stage 3) -->
+  <dialog class="admin-modal" id="modal-qualify">
+    <div class="modal-header">
+      <h3>Qualify Client Enquiry &amp; Create Opportunity</h3>
+      <button class="modal-close" onclick="closeModal('modal-qualify')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-qualify" onsubmit="submitQualification(event)">
+        <input type="hidden" id="qualify-enquiry-id">
+        <div class="form-group">
+          <label>Qualification Decision <span>*</span></label>
+          <input type="text" id="qualify-decision" required placeholder="e.g. Qualified for SolveX Enterprise Development">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Estimated Project Value (INR) <span>*</span></label>
+            <input type="number" step="0.01" id="qualify-est-value" required placeholder="500000.00">
+          </div>
+          <div class="form-group">
+            <label>Next Action <span>*</span></label>
+            <input type="text" id="qualify-next-action" required value="Start Client Requirements Collection">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Business Opportunity &amp; Client Needs</label>
+          <textarea id="qualify-needs" rows="3" placeholder="Describe the business problem and how XEYR will solve it..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label><input type="checkbox" id="qualify-budget-ok"> Budget Confirmed</label>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" id="qualify-timeline-ok"> Timeline Confirmed</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Technical Feasibility &amp; Internal Assessment</label>
+          <textarea id="qualify-feasibility" rows="2" placeholder="Architecture feasibility, recommended stack..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:10px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-qualify')">Cancel</button>
+          <button type="submit" class="btn-primary">Confirm Qualification &amp; Initialize Requirements</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal: Rejection Workflow (Stage 6) -->
+  <dialog class="admin-modal" id="modal-reject">
+    <div class="modal-header">
+      <h3 style="color:var(--rose);">Reject Enquiry with Mandatory Reason</h3>
+      <button class="modal-close" onclick="closeModal('modal-reject')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-reject" onsubmit="submitRejection(event)">
+        <input type="hidden" id="reject-enquiry-id">
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">
+          Company policy strictly prohibits rejecting an enquiry without selecting a verified category and providing a detailed explanation. This action is permanently audited.
+        </p>
+        <div class="form-group">
+          <label>Rejection Category <span>*</span></label>
+          <select id="reject-category" required onchange="checkRejectOther(this)">
+            <option value="">Select Predefined Category...</option>
+            <option value="BUDGET_MISMATCH">Budget Mismatch</option>
+            <option value="SERVICE_NOT_OFFERED">Service Not Offered</option>
+            <option value="TECHNICAL_INFEASIBILITY">Technical Infeasibility</option>
+            <option value="TIMELINE_NOT_FEASIBLE">Timeline Not Feasible</option>
+            <option value="INCOMPLETE_INFO">Incomplete Information</option>
+            <option value="DUPLICATE">Duplicate Enquiry</option>
+            <option value="CLIENT_UNRESPONSIVE">Client Unresponsive</option>
+            <option value="OUTSIDE_SCOPE">Outside Business Scope</option>
+            <option value="RESOURCE_UNAVAILABLE">Resource Unavailability</option>
+            <option value="COMMERCIAL_TERMS_REJECTED">Commercial Terms Not Accepted</option>
+            <option value="OTHER">Other (Detailed Written Explanation Required)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Detailed Rejection Reason <span>*</span></label>
+          <textarea id="reject-reason-detail" rows="3" required placeholder="State precisely why this enquiry cannot be serviced..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Internal Notes (Not shown to client)</label>
+          <textarea id="reject-internal-notes" rows="2" placeholder="Additional context for management review..."></textarea>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="reject-followup-ok"> Appropriate for future follow-up if terms change</label>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:10px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-reject')">Cancel</button>
+          <button type="submit" class="btn-danger">Confirm Rejection &amp; Record Audit Log</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal: Generate Handover ZIP (Stage 8) -->
+  <dialog class="admin-modal" id="modal-handover-gen">
+    <div class="modal-header">
+      <h3>Generate Developer Handover ZIP Package</h3>
+      <button class="modal-close" onclick="closeModal('modal-handover-gen')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="handover-req-id">
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;">
+        The system will compile a downloadable production-ready ZIP archive matching the XEYR specification, complete with ReportLab PDFs, JSON schemas, approved brand assets, and SHA256 checksums.
+      </p>
+
+      <h4>Readiness Checklist Verification</h4>
+      <div class="checklist-list" id="handover-readiness-checklist">
+        <div class="checklist-item"><span>Verifying requirements completeness...</span></div>
+      </div>
+
+      <div class="form-group" style="margin-top:14px;">
+        <label><input type="checkbox" id="handover-force-checkbox"> Proceed with documented exception if any non-critical item is pending</label>
+        <textarea id="handover-exception-notes" rows="2" placeholder="Document reason for exception (if applicable)..."></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('modal-handover-gen')">Cancel</button>
+        <button type="button" class="btn-primary" id="btn-do-generate-zip" onclick="executeHandoverGeneration()">⚡ Generate Real ZIP Archive</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal: Assign Developer (Stage 8/9) -->
+  <dialog class="admin-modal" id="modal-assign-dev">
+    <div class="modal-header">
+      <h3>Assign Developer &amp; Activate Engineering Project</h3>
+      <button class="modal-close" onclick="closeModal('modal-assign-dev')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-assign-dev" onsubmit="submitDeveloperAssignment(event)">
+        <input type="hidden" id="assign-handover-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Select Developer <span>*</span></label>
+            <select id="assign-developer-select" required>
+              <option value="">Select team member...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <select id="assign-priority">
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Engineering Team</label>
+            <input type="text" id="assign-team" value="Core Engineering Team">
+          </div>
+          <div class="form-group">
+            <label>Expected Delivery Date <span>*</span></label>
+            <input type="date" id="assign-date" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Handover Instructions for Developer</label>
+          <textarea id="assign-instructions" rows="3" placeholder="Provide git repository guidelines, staging environment, architecture notes..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:10px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-assign-dev')">Cancel</button>
+          <button type="submit" class="btn-primary">Assign Developer &amp; Activate Project</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal: Upload Brand Asset -->
+  <dialog class="admin-modal" id="modal-upload-asset">
+    <div class="modal-header">
+      <h3>Upload Client Brand Asset or Design File</h3>
+      <button class="modal-close" onclick="closeModal('modal-upload-asset')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-upload-asset" onsubmit="submitAssetUpload(event)">
+        <div class="form-group">
+          <label>Target Project Requirement <span>*</span></label>
+          <select id="asset-req-select" required>
+            <option value="">Select project...</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Asset Title <span>*</span></label>
+            <input type="text" id="asset-title" required placeholder="e.g. Primary Horizontal Vector Logo">
+          </div>
+          <div class="form-group">
+            <label>Asset Category <span>*</span></label>
+            <select id="asset-category" required>
+              <option value="PRIMARY_LOGO">Primary Brand Logo</option>
+              <option value="SECONDARY_LOGO">Secondary Logo</option>
+              <option value="LOGO_VARIATION">Logo Variation</option>
+              <option value="BRAND_ICON">Brand Icon</option>
+              <option value="FAVICON">Favicon</option>
+              <option value="COLOR_PALETTE">Brand Colour Palette</option>
+              <option value="TYPOGRAPHY">Typography / Font Reference</option>
+              <option value="GUIDELINES_PDF">Brand Guidelines PDF</option>
+              <option value="REFERENCE_IMAGE">Reference Images</option>
+              <option value="UI_SCREENSHOT">UI Reference Screenshots</option>
+              <option value="WIREFRAME">Wireframes / Design Files</option>
+              <option value="TECHNICAL_SPEC">Technical Specifications / Docs</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Select File <span>*</span> (Max 50MB; Executables blocked)</label>
+          <input type="file" id="asset-file" required>
+        </div>
+        <div class="form-group">
+          <label>Notes &amp; Usage Instructions</label>
+          <textarea id="asset-notes" rows="2" placeholder="Color codes, intended placement, notes..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:10px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-upload-asset')">Cancel</button>
+          <button type="submit" class="btn-primary">Upload &amp; Verify Checksum</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal: Create / Edit Event -->
+  <dialog class="admin-modal" id="modal-create-event">
+    <div class="modal-header">
+      <h3 id="modal-create-event-title">Create New Event / Workshop</h3>
+      <button class="modal-close" onclick="closeModal('modal-create-event')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-create-event" onsubmit="submitCreateEvent(event)">
+        <input type="hidden" id="ev-edit-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Event Title <span>*</span></label>
+            <input type="text" id="ev-title" required placeholder="e.g. AI & Full-Stack Engineering Masterclass">
+          </div>
+          <div class="form-group">
+            <label>Category <span>*</span></label>
+            <select id="ev-type" required>
+              <option value="Workshop">Workshop</option>
+              <option value="Expert Session">Expert Session</option>
+              <option value="Community Meetup">Community Meetup</option>
+              <option value="Conference">Conference</option>
+              <option value="Hackathon">Hackathon</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Event Date</label>
+            <input type="date" id="ev-date">
+          </div>
+          <div class="form-group">
+            <label>Date/Time Display String</label>
+            <input type="text" id="ev-date-str" placeholder="e.g. Sat, Nov 14 · 10:00 AM - 1:00 PM">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Delivery Mode <span>*</span></label>
+            <select id="ev-mode">
+              <option value="Online">Online (Zoom / Meet)</option>
+              <option value="Offline">Offline Campus</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Venue / Online Details</label>
+            <input type="text" id="ev-venue" placeholder="e.g. XEYR Tech Labs / Google Meet">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Pricing Structure <span>*</span></label>
+            <select id="ev-is-paid" onchange="toggleFeeInput(this)">
+              <option value="false">Free Event (No Payment Required)</option>
+              <option value="true">Paid Event (Requires Razorpay Checkout)</option>
+            </select>
+          </div>
+          <div class="form-group" id="ev-fee-group" style="display:none;">
+            <label>Registration Fee (INR) <span>*</span></label>
+            <input type="number" step="0.01" id="ev-fee-amount" value="0.00">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Maximum Participant Capacity (Leave blank for unlimited)</label>
+            <input type="number" id="ev-max-participants" placeholder="e.g. 100">
+          </div>
+          <div class="form-group">
+            <label>Publication Status <span>*</span></label>
+            <select id="ev-status">
+              <option value="UPCOMING">Upcoming (Open for registration)</option>
+              <option value="DRAFT">Draft (Internal review)</option>
+              <option value="COMPLETED">Completed (Move to Archive)</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Poster Image URL or Upload</label>
+          <input type="text" id="ev-poster-url" placeholder="https://images.unsplash.com/photo-...">
+        </div>
+
+        <div class="form-group">
+          <label>Short Overview (Shown on cards)</label>
+          <textarea id="ev-short-desc" rows="2" placeholder="Brief 1-2 sentence overview..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Full Event Description &amp; Curriculum</label>
+          <textarea id="ev-full-desc" rows="3" placeholder="Detailed syllabus, key takeaways, speaker details..."></textarea>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:14px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modal-create-event')">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-save-event">Save &amp; Publish Event</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal: Dynamic Form Builder for an Event -->
+  <dialog class="admin-modal" id="modal-event-form-builder">
+    <div class="modal-header">
+      <h3 id="form-builder-title">Dynamic Registration Form Builder</h3>
+      <button class="modal-close" onclick="closeModal('modal-event-form-builder')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="builder-event-id">
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;">
+        Default fields (Full Name, Email, Phone, College) are included automatically. Use this builder to add custom fields specifically needed for this event (e.g. Department, Team Size, GitHub URL, Experience Level).
+      </p>
+
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--navy-card-border);border-radius:12px;padding:16px;margin-bottom:20px;">
+        <h4 style="font-size:0.95rem;margin-bottom:12px;">+ Add New Registration Field</h4>
+        <form id="form-add-field" onsubmit="submitAddFormField(event)" style="display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:10px;align-items:end;">
+          <div class="form-group">
+            <label>Field Label</label>
+            <input type="text" id="new-fld-label" required placeholder="e.g. Department / Branch">
+          </div>
+          <div class="form-group">
+            <label>Field Type</label>
+            <select id="new-fld-type">
+              <option value="text">Single Line Text</option>
+              <option value="textarea">Multi-line Text</option>
+              <option value="dropdown">Dropdown Select</option>
+              <option value="college">College / Org</option>
+              <option value="year">Year of Study</option>
+              <option value="team_name">Team Name</option>
+              <option value="consent">Consent Checkbox</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Options (if dropdown)</label>
+            <input type="text" id="new-fld-options" placeholder="Option 1, Option 2, Option 3">
+          </div>
+          <div>
+            <button type="submit" class="btn-primary" style="height:40px;">+ Add Field</button>
+          </div>
+        </form>
+      </div>
+
+      <h4>Currently Configured Fields for This Event</h4>
+      <div id="builder-fields-list" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+        <!-- Configured fields loaded dynamically -->
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast notification -->
+  <div class="admin-toast" id="admin-toast"></div>
+
+  <!-- Dashboard Logic JS -->
+  <script>
+    let globalData = {};
+    let charts = {};
+
+    function showToast(msg) {
+      const toast = document.getElementById('admin-toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).close();
+    }
+
+    function openModal(id) {
+      document.getElementById(id).showModal();
+    }
+
+    function switchView(viewName) {
+      document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
+      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+
+      const target = document.getElementById(`sec-${viewName}`);
+      if(target) target.style.display = 'block';
+
+      const navLink = document.querySelector(`.sidebar-item a[href="#view-${viewName}"]`);
+      if(navLink) navLink.parentElement.classList.add('active');
+
+      const titles = {
+        'overview': 'Executive Dashboard & Business Intelligence',
+        'enquiries': 'Client Enquiries & CRM Pipeline',
+        'requirements': 'Client Requirements Workspaces',
+        'assets': 'Brand Assets & File Management',
+        'handover': 'Automated Developer Handover ZIP Packages',
+        'projects': 'Developer Project Progress & Sprints',
+        'events-mgmt': 'Central Event Management & Dynamic Forms',
+        'event-payments': 'Event Payments & Razorpay Reconciliations',
+        'social-qr': 'Official Social Media & QR Code Assets',
+        'rejections': 'Enquiry Rejection History & Audit',
+        'events': 'Workshops & SkillBridge Applications',
+        'finance': 'Revenue, Invoices & Payments Foundation',
+        'reports': 'Verified CSV Reports & Exports',
+        'audit': 'System Security & Immutable Audit Logs'
+      };
+      document.getElementById('view-title').textContent = titles[viewName] || 'Administration';
+
+      // Load specific data for view
+      if(viewName === 'enquiries') loadEnquiries();
+      else if(viewName === 'requirements') loadRequirements();
+      else if(viewName === 'assets') loadAssets();
+      else if(viewName === 'handover') loadHandovers();
+      else if(viewName === 'projects') loadProjects();
+      else if(viewName === 'events-mgmt') loadAdminEvents();
+      else if(viewName === 'event-payments') loadEventPaymentsDashboard();
+      else if(viewName === 'social-qr') loadSocialMediaConfig();
+      else if(viewName === 'rejections') loadRejections();
+      else if(viewName === 'events') loadEventsAndSkillBridge();
+      else if(viewName === 'finance') loadFinancials();
+      else if(viewName === 'audit') loadAuditLogs();
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // Initialize Dashboard
+    window.addEventListener('DOMContentLoaded', async () => {
+      const isAuth = await fetchCurrentUser();
+      if(isAuth) {
+        refreshAllData();
+      }
+    });
+
+    async function fetchCurrentUser() {
+      try {
+        const res = await fetch('/api/auth/me/');
+        if(res.ok) {
+          const user = await res.json();
+          document.getElementById('user-display-name').textContent = user.first_name ? `${user.first_name} ${user.last_name}` : user.username;
+          document.getElementById('user-display-role').textContent = user.role.replace('_', ' ');
+          document.getElementById('auth-gate-overlay').style.display = 'none';
+          return true;
+        } else {
+          document.getElementById('auth-gate-overlay').style.display = 'flex';
+          return false;
+        }
+      } catch(e) {
+        console.warn('Current user check failed:', e);
+        document.getElementById('auth-gate-overlay').style.display = 'flex';
+        return false;
+      }
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const errBox = document.getElementById('auth-gate-error');
+      const submitBtn = document.getElementById('auth-gate-btn');
+      errBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>⏳</span> Verifying Credentials...';
+
+      const username = document.getElementById('auth-gate-username').value.trim();
+      const password = document.getElementById('auth-gate-password').value;
+      const csrftoken = getCookie('csrftoken');
+
+      try {
+        const res = await fetch('/api/auth/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {})
+          },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if(res.ok) {
+          document.getElementById('auth-gate-overlay').style.display = 'none';
+          document.getElementById('user-display-name').textContent = data.user.first_name ? `${data.user.first_name} ${data.user.last_name}` : data.user.username;
+          document.getElementById('user-display-role').textContent = data.user.role.replace('_', ' ');
+          showToast(`Welcome, ${data.user.username}! Access granted.`);
+          refreshAllData();
+        } else {
+          errBox.textContent = data.error || 'Invalid credentials or inactive account.';
+          errBox.style.display = 'block';
+        }
+      } catch(err) {
+        errBox.textContent = 'Connection error: ' + err.message;
+        errBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>🔒</span> Authenticate &amp; Unlock Dashboard';
+      }
+    }
+
+    async function refreshAllData() {
+      const period = document.getElementById('global-period-select').value;
+      await Promise.all([
+        loadDashboardMetrics(period),
+        loadRuleBasedInsights()
+      ]);
+    }
+
+    async function loadDashboardMetrics(period) {
+      try {
+        const res = await fetch(`/api/analytics/dashboard/?period=${period}`);
+        if(!res.ok) return;
+        const data = await res.json();
+        globalData.bi = data;
+
+        // Render KPI cards
+        const k = data.kpis;
+        document.getElementById('kpi-total-enquiries').textContent = k.total_enquiries;
+        document.getElementById('kpi-qualified').textContent = k.qualified_enquiries;
+        document.getElementById('kpi-conv-rate').textContent = `${data.conversion_funnel.enquiry_to_qualified_pct}%`;
+        document.getElementById('kpi-pipeline-val').textContent = `₹${k.pipeline_value.toLocaleString('en-IN')}`;
+        document.getElementById('kpi-handovers').textContent = k.handovers_generated;
+        document.getElementById('kpi-active-projects').textContent = k.active_projects;
+        document.getElementById('kpi-blocked-projects').textContent = `${k.blocked_projects} blocked`;
+        document.getElementById('kpi-revenue').textContent = `₹${k.amount_received.toLocaleString('en-IN')}`;
+
+        // Render Charts
+        renderFunnelChart(data.conversion_funnel);
+        renderServicesChart(data.services);
+        renderRejectionsChart(data.rejection_reasons);
+        renderFinancialsChart(k);
+      } catch(e) {
+        console.error('Error loading dashboard metrics:', e);
+      }
+    }
+
+    async function loadRuleBasedInsights() {
+      try {
+        const res = await fetch('/api/analytics/insights/');
+        if(!res.ok) return;
+        const data = await res.json();
+        const container = document.getElementById('insights-container');
+        container.innerHTML = '';
+
+        data.insights.forEach(item => {
+          const div = document.createElement('div');
+          div.className = `insight-item ${item.severity || 'info'}`;
+          div.innerHTML = `
+            <div>
+              <h4>${item.title}</h4>
+              <p>${item.message}</p>
+            </div>
+            <a class="insight-action" onclick="handleInsightClick('${item.action_link}')">${item.action_label} →</a>
+          `;
+          container.appendChild(div);
+        });
+      } catch(e) {
+        console.error('Error loading insights:', e);
+      }
+    }
+
+    function handleInsightClick(link) {
+      if(link.includes('#requirements')) switchView('requirements');
+      else if(link.includes('#handover')) switchView('handover');
+      else if(link.includes('#projects')) switchView('projects');
+      else if(link.includes('#enquiries')) switchView('enquiries');
+      else switchView('overview');
+    }
+
+    // Chart Rendering
+    function renderFunnelChart(funnel) {
+      const ctx = document.getElementById('chart-funnel');
+      if(!ctx) return;
+      if(charts.funnel) charts.funnel.destroy();
+
+      charts.funnel = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Enquiry Submitted', 'Lead Qualified', 'Requirements Done', 'Handover ZIP Done'],
+          datasets: [{
+            label: 'Conversion Stage %',
+            data: [100, funnel.enquiry_to_qualified_pct, funnel.qualified_to_requirements_pct, funnel.requirements_to_handover_pct],
+            backgroundColor: ['#3b82f6', '#1465f4', '#27d4f4', '#10b981'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderServicesChart(services) {
+      const ctx = document.getElementById('chart-services');
+      if(!ctx) return;
+      if(charts.services) charts.services.destroy();
+
+      const labels = services.length ? services.map(s => s.service_type) : ['SolveX Software', 'AI & Automation', 'SkillBridge College', 'General'];
+      const counts = services.length ? services.map(s => s.count) : [5, 3, 4, 1];
+
+      charts.services = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: counts,
+            backgroundColor: ['#1465f4', '#27d4f4', '#3b82f6', '#8b5cf6', '#10b981'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, color: '#94a3b8' } } }
+        }
+      });
+    }
+
+    function renderRejectionsChart(reasons) {
+      const ctx = document.getElementById('chart-rejections');
+      if(!ctx) return;
+      if(charts.rejections) charts.rejections.destroy();
+
+      const labels = reasons.length ? reasons.map(r => r.category.replace('_', ' ')) : ['Budget Mismatch', 'Timeline Infeasible', 'Scope Outside'];
+      const counts = reasons.length ? reasons.map(r => r.count) : [3, 1, 1];
+
+      charts.rejections = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Rejection Count',
+            data: counts,
+            backgroundColor: '#f43f5e',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderFinancialsChart(kpis) {
+      const ctx = document.getElementById('chart-financials');
+      if(!ctx) return;
+      if(charts.financials) charts.financials.destroy();
+
+      charts.financials = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Invoiced', 'Collected', 'Pending', 'Expenses'],
+          datasets: [{
+            data: [kpis.amount_invoiced, kpis.amount_received, kpis.amount_pending, kpis.expenses],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f43f5e'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: v => '₹' + v.toLocaleString('en-IN') }, grid: { color: 'rgba(255,255,255,0.06)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // Enquiries Table Loader
+    async function loadEnquiries() {
+      const statusFilter = document.getElementById('enquiry-status-filter').value;
+      const tbody = document.getElementById('enquiries-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading enquiries...</td></tr>';
+
+      try {
+        const url = statusFilter ? `/api/enquiries/?status=${statusFilter}` : '/api/enquiries/';
+        const res = await fetch(url);
+        const enquiries = await res.json();
+        globalData.enquiries = enquiries;
+        document.getElementById('badge-enquiries').textContent = enquiries.length;
+
+        if(!enquiries.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No enquiries found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        enquiries.forEach(e => {
+          const tr = document.createElement('tr');
+          const statusClass = e.status === 'QUALIFIED' ? 'badge-qualified' : (e.status === 'REJECTED' ? 'badge-rejected' : 'badge-new');
+          tr.innerHTML = `
+            <td><strong>${e.reference_id}</strong></td>
+            <td>${e.client_name}</td>
+            <td>${e.contact_person || 'N/A'}<br><small style="color:var(--text-muted)">${e.email}</small></td>
+            <td>${e.service_type}</td>
+            <td><span class="status-badge ${statusClass}">${e.status}</span></td>
+            <td><small>${e.source}</small></td>
+            <td><small>${new Date(e.created_at).toLocaleDateString()}</small></td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                ${e.status !== 'QUALIFIED' && e.status !== 'REJECTED' ? `<button class="btn-success" style="padding:4px 8px;font-size:0.75rem;" onclick="openQualifyModal(${e.id})">Qualify</button>` : ''}
+                ${e.status !== 'REJECTED' ? `<button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="openRejectModal(${e.id})">Reject</button>` : `<button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="reopenEnquiry(${e.id})">Reopen</button>`}
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--rose);">Failed to load enquiries.</td></tr>';
+      }
+    }
+
+    // Requirements Table Loader
+    async function loadRequirements() {
+      const tbody = document.getElementById('requirements-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading requirements...</td></tr>';
+      try {
+        const res = await fetch('/api/requirements/');
+        const list = await res.json();
+        globalData.requirements = list;
+
+        // Populate asset upload select dropdown too
+        const assetSelect = document.getElementById('asset-req-select');
+        assetSelect.innerHTML = '<option value="">Select project requirement...</option>';
+        list.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = `${r.requirement_reference} - ${r.project_name}`;
+          assetSelect.appendChild(opt);
+        });
+
+        if(!list.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No requirements workspaces created yet. Qualify an enquiry to initialize one.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        list.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${r.requirement_reference}</strong></td>
+            <td>${r.enquiry_reference}</td>
+            <td>${r.project_name}</td>
+            <td>${r.legal_business_name}</td>
+            <td><span class="status-badge badge-new">${r.status}</span></td>
+            <td>₹${r.approved_budget.toLocaleString('en-IN')}</td>
+            <td>V${r.version}</td>
+            <td>
+              <button class="btn-primary" style="padding:4px 10px;font-size:0.75rem;" onclick="openHandoverGenModal(${r.id})">Prepare Handover ZIP ↗</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--rose);">Failed to load requirements.</td></tr>';
+      }
+    }
+
+    // Brand Assets Loader
+    async function loadAssets() {
+      const tbody = document.getElementById('assets-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading assets...</td></tr>';
+      try {
+        const res = await fetch('/api/assets/');
+        const assets = await res.json();
+        if(!assets.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No brand assets uploaded yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        assets.forEach(a => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${a.title}</strong></td>
+            <td>${a.requirement}</td>
+            <td><span class="status-badge badge-new">${a.category_display}</span></td>
+            <td><small>${a.filename}</small></td>
+            <td><small>${(a.file_size / 1024).toFixed(1)} KB</small></td>
+            <td><code style="font-size:0.68rem;color:var(--cyan);">${a.checksum_sha256 ? a.checksum_sha256.substring(0, 16) + '...' : 'Pending'}</code></td>
+            <td><span class="status-badge ${a.status === 'APPROVED' ? 'badge-qualified' : 'badge-new'}">${a.status}</span></td>
+            <td>
+              <a href="${a.download_url}" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" download>Download</a>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--rose);">Failed to load assets.</td></tr>';
+      }
+    }
+
+    // Handover Packages Loader
+    async function loadHandovers() {
+      const tbody = document.getElementById('handover-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading handovers...</td></tr>';
+      try {
+        const res = await fetch('/api/handover/');
+        const handovers = await res.json();
+        if(!handovers.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No handover ZIP packages generated yet. Use the Requirements tab to generate one.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        handovers.forEach(h => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${h.handover_reference}</strong></td>
+            <td>${h.requirement_reference}</td>
+            <td>${h.project_name}</td>
+            <td>V${h.version}</td>
+            <td>${(h.zip_size / 1024).toFixed(1)} KB</td>
+            <td>${h.assigned_developer_name || '<span style="color:var(--amber);">Unassigned</span>'}</td>
+            <td><small>${new Date(h.generated_at).toLocaleDateString()}</small></td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <a href="${h.download_url}" class="btn-primary" style="padding:4px 8px;font-size:0.75rem;" download>Download ZIP</a>
+                <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="openAssignDevModal(${h.id})">Assign Dev</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--rose);">Failed to load handovers.</td></tr>';
+      }
+    }
+
+    // Projects Loader
+    async function loadProjects() {
+      const tbody = document.getElementById('projects-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading projects...</td></tr>';
+      try {
+        const res = await fetch('/api/projects/');
+        const projects = await res.json();
+        if(!projects.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No developer projects activated yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        projects.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${p.project_code}</strong></td>
+            <td>${p.title}</td>
+            <td>${p.client_name || 'Client'}</td>
+            <td>${p.assigned_developer_name || 'Unassigned'}</td>
+            <td><span class="status-badge badge-qualified">${p.status}</span></td>
+            <td>
+              <div style="background:rgba(255,255,255,0.1);border-radius:4px;height:8px;width:100px;overflow:hidden;margin-bottom:4px;">
+                <div style="background:var(--emerald);height:100%;width:${p.progress_percentage}%;"></div>
+              </div>
+              <small>${p.progress_percentage}%</small>
+            </td>
+            <td><small>${p.expected_completion_date || 'N/A'}</small></td>
+            <td>
+              <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="promptUpdateProgress(${p.id}, ${p.progress_percentage})">Update %</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--rose);">Failed to load projects.</td></tr>';
+      }
+    }
+
+    // Rejections Loader
+    async function loadRejections() {
+      const tbody = document.getElementById('rejections-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading rejections...</td></tr>';
+      try {
+        const res = await fetch('/api/enquiries/?status=REJECTED');
+        const rejectedEnqs = await res.json();
+        if(!rejectedEnqs.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No rejected enquiries recorded.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        rejectedEnqs.forEach(e => {
+          const rej = (e.rejections && e.rejections.length) ? e.rejections[0] : {};
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${e.reference_id}</strong></td>
+            <td>${e.client_name}</td>
+            <td><span class="status-badge badge-rejected">${rej.category_display || 'Documented Rejection'}</span></td>
+            <td><small>${rej.reason_detail || 'Reason recorded in audit trail.'}</small></td>
+            <td>${rej.rejected_by_name || 'Admin'}</td>
+            <td><small>${rej.rejected_at ? new Date(rej.rejected_at).toLocaleDateString() : 'N/A'}</small></td>
+            <td>${rej.reopened ? '<span class="status-badge badge-qualified">Reopened</span>' : '<span class="status-badge badge-rejected">Rejected</span>'}</td>
+            <td>
+              ${!rej.reopened ? `<button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="reopenEnquiry(${e.id})">Reopen Enquiry</button>` : ''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--rose);">Failed to load rejections.</td></tr>';
+      }
+    }
+
+    // Events & SkillBridge Loader
+    async function loadEventsAndSkillBridge() {
+      const tbody = document.getElementById('events-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading registrations...</td></tr>';
+      try {
+        const [evRes, skRes] = await Promise.all([
+          fetch('/api/events/admin/events/'),
+          fetch('/api/events/admin/skillbridge/')
+        ]);
+        const evData = await evRes.json();
+        const skData = await skRes.json();
+
+        tbody.innerHTML = '';
+        evData.registrations.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="status-badge badge-new">Event Registration</span></td>
+            <td>${r.full_name}<br><small style="color:var(--text-muted)">${r.company_or_college}</small></td>
+            <td>${r.email}</td>
+            <td>${r.phone}</td>
+            <td>${r.event_name}</td>
+            <td><small>${new Date(r.created_at).toLocaleDateString()}</small></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        skData.college_enquiries.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="status-badge badge-qualified">SkillBridge College</span></td>
+            <td>${c.college_name}<br><small style="color:var(--text-muted)">${c.contact_name}</small></td>
+            <td>${c.email}</td>
+            <td>${c.phone}</td>
+            <td>${c.preferred_service}</td>
+            <td><small>${new Date(c.created_at).toLocaleDateString()}</small></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        skData.professional_applications.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="status-badge badge-handover">SkillBridge Trainer</span></td>
+            <td>${p.full_name}</td>
+            <td>${p.email}</td>
+            <td>${p.phone}</td>
+            <td>${p.profile_type}: ${p.skills_can_teach}</td>
+            <td><small>${new Date(p.created_at).toLocaleDateString()}</small></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--rose);">Failed to load events.</td></tr>';
+      }
+    }
+
+    // Financials Loader
+    async function loadFinancials() {
+      const tbody = document.getElementById('finance-tbody');
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading financials...</td></tr>';
+      try {
+        const res = await fetch('/api/finance/invoices/');
+        const invoices = await res.json();
+        if(!invoices.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No invoices recorded yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        invoices.forEach(inv => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${inv.reference_no}</strong></td>
+            <td>${inv.doc_type_display}</td>
+            <td>₹${inv.amount_invoiced.toLocaleString('en-IN')}</td>
+            <td style="color:var(--emerald);">₹${inv.amount_received.toLocaleString('en-IN')}</td>
+            <td style="color:var(--amber);">₹${inv.amount_pending.toLocaleString('en-IN')}</td>
+            <td><span class="status-badge ${inv.status === 'PAID' ? 'badge-qualified' : 'badge-new'}">${inv.status}</span></td>
+            <td><small>${inv.due_date || 'N/A'}</small></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--rose);">Failed to load financials.</td></tr>';
+      }
+    }
+
+    // Audit Logs Loader
+    async function loadAuditLogs() {
+      const tbody = document.getElementById('audit-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading audit logs...</td></tr>';
+      try {
+        const res = await fetch('/api/audit-logs/');
+        const logs = await res.json();
+        tbody.innerHTML = '';
+        logs.forEach(l => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><small>${new Date(l.timestamp).toLocaleString()}</small></td>
+            <td><strong>${l.user_name || 'System'}</strong> <small style="color:var(--cyan)">(${l.user_role || 'Auto'})</small></td>
+            <td><code style="color:var(--cyan);font-weight:700;">${l.action}</code></td>
+            <td>${l.entity_type} #${l.entity_id}</td>
+            <td><small>${JSON.stringify(l.details)}</small></td>
+            <td><small style="color:var(--text-muted);">${l.ip_address || 'localhost'}</small></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--rose);">Failed to load audit trail.</td></tr>';
+      }
+    }
+
+    // Modal Actions
+    function openQualifyModal(enquiryId) {
+      document.getElementById('qualify-enquiry-id').value = enquiryId;
+      openModal('modal-qualify');
+    }
+
+    async function submitQualification(e) {
+      e.preventDefault();
+      const id = document.getElementById('qualify-enquiry-id').value;
+      const payload = {
+        decision: document.getElementById('qualify-decision').value,
+        estimated_project_value: parseFloat(document.getElementById('qualify-est-value').value) || 0,
+        next_action: document.getElementById('qualify-next-action').value,
+        client_needs: document.getElementById('qualify-needs').value,
+        budget_confirmed: document.getElementById('qualify-budget-ok').checked,
+        timeline_confirmed: document.getElementById('qualify-timeline-ok').checked,
+        technical_feasibility: document.getElementById('qualify-feasibility').value
+      };
+
+      try {
+        const res = await fetch(`/api/enquiries/${id}/qualify/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+          closeModal('modal-qualify');
+          showToast('Enquiry qualified and requirements workspace initialized.');
+          refreshAllData();
+          loadEnquiries();
+        } else {
+          const err = await res.json();
+          alert('Error: ' + JSON.stringify(err));
+        }
+      } catch(err) {
+        alert('Qualification failed: ' + err);
+      }
+    }
+
+    function openRejectModal(enquiryId) {
+      document.getElementById('reject-enquiry-id').value = enquiryId;
+      openModal('modal-reject');
+    }
+
+    function checkRejectOther(select) {
+      const detail = document.getElementById('reject-reason-detail');
+      if(select.value === 'OTHER') {
+        detail.placeholder = "MANDATORY: Provide a comprehensive explanation why this enquiry is being rejected...";
+      }
+    }
+
+    async function submitRejection(e) {
+      e.preventDefault();
+      const id = document.getElementById('reject-enquiry-id').value;
+      const payload = {
+        category: document.getElementById('reject-category').value,
+        reason_detail: document.getElementById('reject-reason-detail').value,
+        internal_notes: document.getElementById('reject-internal-notes').value,
+        future_followup_appropriate: document.getElementById('reject-followup-ok').checked
+      };
+
+      if(!payload.category || !payload.reason_detail.trim()) {
+        alert('Rejection category and a detailed written reason are strictly mandatory.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/enquiries/${id}/reject/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+          closeModal('modal-reject');
+          showToast('Enquiry rejected with documented audit trail.');
+          refreshAllData();
+          loadEnquiries();
+        } else {
+          const err = await res.json();
+          alert('Rejection error: ' + (err.error || JSON.stringify(err)));
+        }
+      } catch(err) {
+        alert('Rejection failed: ' + err);
+      }
+    }
+
+    async function reopenEnquiry(id) {
+      const reason = prompt("Enter documented justification for reopening this rejected enquiry:");
+      if(!reason || !reason.trim()) {
+        alert("A justification reason is required to reopen a rejected enquiry.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/enquiries/${id}/reopen/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reopen_reason: reason.trim() })
+        });
+        if(res.ok) {
+          showToast('Enquiry reopened and moved to Under Review.');
+          refreshAllData();
+          loadEnquiries();
+        } else {
+          const err = await res.json();
+          alert('Error: ' + JSON.stringify(err));
+        }
+      } catch(e) {
+        alert('Reopen failed: ' + e);
+      }
+    }
+
+    async function openHandoverGenModal(reqId) {
+      document.getElementById('handover-req-id').value = reqId;
+      const checklistContainer = document.getElementById('handover-readiness-checklist');
+      checklistContainer.innerHTML = '<div class="checklist-item"><span>Verifying readiness...</span></div>';
+      openModal('modal-handover-gen');
+
+      try {
+        const res = await fetch(`/api/requirements/enquiry/${reqId}/readiness/`);
+        if(res.ok) {
+          const data = await res.json();
+          checklistContainer.innerHTML = '';
+          for (const [key, passed] of Object.entries(data.checks)) {
+            const div = document.createElement('div');
+            div.className = `checklist-item ${passed ? 'passed' : 'missing'}`;
+            const label = key.replace(/_/g, ' ').toUpperCase();
+            div.innerHTML = `
+              <span>${label}</span>
+              <strong style="color:${passed ? 'var(--emerald)' : 'var(--rose)'};">${passed ? '✓ PASSED' : '✗ PENDING'}</strong>
+            `;
+            checklistContainer.appendChild(div);
+          }
+        }
+      } catch(e) {
+        checklistContainer.innerHTML = '<div class="checklist-item missing"><span>Error checking readiness</span></div>';
+      }
+    }
+
+    async function executeHandoverGeneration() {
+      const reqId = document.getElementById('handover-req-id').value;
+      const forceException = document.getElementById('handover-force-checkbox').checked;
+      const exceptionNotes = document.getElementById('handover-exception-notes').value;
+
+      const btn = document.getElementById('btn-do-generate-zip');
+      btn.disabled = true;
+      btn.textContent = 'Generating real ZIP archive...';
+
+      try {
+        const res = await fetch(`/api/handover/requirement/${reqId}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            force_with_exception: forceException,
+            exception_notes: exceptionNotes
+          })
+        });
+
+        if(res.ok) {
+          const record = await res.json();
+          closeModal('modal-handover-gen');
+          showToast(`Handover ZIP package V${record.version} generated successfully!`);
+          switchView('handover');
+          refreshAllData();
+        } else {
+          const err = await res.json();
+          alert('Generation error: ' + (err.error || JSON.stringify(err)));
+        }
+      } catch(e) {
+        alert('ZIP generation failed: ' + e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ Generate Real ZIP Archive';
+      }
+    }
+
+    async function openAssignDevModal(handoverId) {
+      document.getElementById('assign-handover-id').value = handoverId;
+      const select = document.getElementById('assign-developer-select');
+      select.innerHTML = '<option value="">Loading developers...</option>';
+      openModal('modal-assign-dev');
+
+      try {
+        const res = await fetch('/api/users/');
+        if(res.ok) {
+          const users = await res.json();
+          select.innerHTML = '<option value="">Select team member...</option>';
+          users.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = `${u.first_name ? u.first_name + ' ' + u.last_name : u.username} (${u.role})`;
+            select.appendChild(opt);
+          });
+        }
+      } catch(e) {
+        select.innerHTML = '<option value="">Failed to load developers</option>';
+      }
+    }
+
+    async function submitDeveloperAssignment(e) {
+      e.preventDefault();
+      const id = document.getElementById('assign-handover-id').value;
+      const payload = {
+        developer_id: document.getElementById('assign-developer-select').value,
+        priority: document.getElementById('assign-priority').value,
+        developer_team: document.getElementById('assign-team').value,
+        expected_delivery_date: document.getElementById('assign-date').value,
+        instructions: document.getElementById('assign-instructions').value
+      };
+
+      try {
+        const res = await fetch(`/api/handover/${id}/assign-developer/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+          closeModal('modal-assign-dev');
+          showToast('Developer assigned and project activated.');
+          switchView('projects');
+          refreshAllData();
+        } else {
+          const err = await res.json();
+          alert('Assignment error: ' + JSON.stringify(err));
+        }
+      } catch(err) {
+        alert('Assignment failed: ' + err);
+      }
+    }
+
+    function openUploadAssetModal() {
+      openModal('modal-upload-asset');
+    }
+
+    async function submitAssetUpload(e) {
+      e.preventDefault();
+      const reqId = document.getElementById('asset-req-select').value;
+      if(!reqId) { alert('Please select a project requirement workspace.'); return; }
+
+      const fileInput = document.getElementById('asset-file');
+      if(!fileInput.files.length) { alert('Please select a file to upload.'); return; }
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('title', document.getElementById('asset-title').value);
+      formData.append('category', document.getElementById('asset-category').value);
+      formData.append('notes', document.getElementById('asset-notes').value);
+
+      try {
+        const res = await fetch(`/api/assets/requirement/${reqId}/`, {
+          method: 'POST',
+          body: formData
+        });
+        if(res.ok) {
+          closeModal('modal-upload-asset');
+          showToast('Asset uploaded and checksum computed successfully.');
+          loadAssets();
+        } else {
+          const err = await res.json();
+          alert('Upload failed: ' + (err.error || JSON.stringify(err)));
+        }
+      } catch(err) {
+        alert('Upload failed: ' + err);
+      }
+    }
+
+    async function promptUpdateProgress(projectId, current) {
+      const val = prompt(`Enter updated completion percentage (0 - 100):`, current);
+      if(val === null) return;
+      const num = parseInt(val, 10);
+      if(isNaN(num) || num < 0 || num > 100) { alert('Invalid percentage.'); return; }
+
+      try {
+        const res = await fetch(`/api/projects/${projectId}/`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            progress_percentage: num,
+            status: num === 100 ? 'COMPLETED' : 'IN_PROGRESS'
+          })
+        });
+        if(res.ok) {
+          showToast('Project progress updated.');
+          loadProjects();
+          refreshAllData();
+        }
+      } catch(e) {
+        alert('Progress update failed: ' + e);
+      }
+    }
+
+    // Event Management Logic
+    function toggleFeeInput(select) {
+      document.getElementById('ev-fee-group').style.display = select.value === 'true' ? 'block' : 'none';
+    }
+
+    async function loadAdminEvents() {
+      const tbody = document.getElementById('events-mgmt-tbody');
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading events...</td></tr>';
+      try {
+        const res = await fetch('/api/events/manage/');
+        const events = await res.json();
+        if(!events.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No events found. Click "+ Create New Event" to publish one.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        events.forEach(ev => {
+          const tr = document.createElement('tr');
+          const isPaid = ev.is_paid && ev.fee_amount > 0;
+          const feeBadge = isPaid ? `<span class="status-badge" style="background:#fef3c7;color:#b45309;">₹${ev.fee_amount} (${ev.currency})</span>` : `<span class="status-badge" style="background:#dcfce7;color:#15803d;">Free</span>`;
+          const statusClass = ev.status === 'UPCOMING' ? 'badge-qualified' : (ev.status === 'COMPLETED' ? 'badge-handover' : 'badge-new');
+
+          tr.innerHTML = `
+            <td>
+              <strong>${ev.title}</strong><br>
+              <small style="color:var(--text-muted)">/${ev.slug}</small>
+            </td>
+            <td>${ev.event_type}</td>
+            <td>
+              <small>${ev.date_time || ev.event_date || 'TBA'}</small><br>
+              <small style="color:var(--text-muted)">${ev.mode} (${ev.venue})</small>
+            </td>
+            <td>${feeBadge}</td>
+            <td><span class="status-badge ${statusClass}">${ev.status}</span></td>
+            <td><strong>${ev.confirmed_count || 0}</strong> / ${ev.max_participants || '∞'}</td>
+            <td>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="openEventFormBuilder(${ev.id}, '${ev.title.replace(/'/g, "\\'")}')">📝 Form Fields (${ev.form_fields ? ev.form_fields.length : 0})</button>
+                <button class="btn-primary" style="padding:4px 8px;font-size:0.75rem;" onclick="notifyEventSubscribers(${ev.id}, '${ev.title.replace(/'/g, "\\'")}')">📢 Notify Subscribers</button>
+                <a href="/api/events/manage/${ev.id}/export-csv/" class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;display:inline-block;" download>📥 CSV</a>
+                ${ev.status === 'UPCOMING' ? `<button class="btn-success" style="padding:4px 8px;font-size:0.75rem;" onclick="updateEventStatus(${ev.id}, 'COMPLETED')">✓ Mark Completed</button>` : `<button class="btn-secondary" style="padding:4px 8px;font-size:0.75rem;" onclick="updateEventStatus(${ev.id}, 'UPCOMING')">↻ Reopen</button>`}
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--rose);">Failed to load events.</td></tr>';
+      }
+    }
+
+    function openCreateEventModal() {
+      document.getElementById('form-create-event').reset();
+      document.getElementById('ev-edit-id').value = '';
+      document.getElementById('modal-create-event-title').textContent = 'Create New Event / Workshop';
+      document.getElementById('ev-fee-group').style.display = 'none';
+      openModal('modal-create-event');
+    }
+
+    async function submitCreateEvent(e) {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('ev-title').value,
+        event_type: document.getElementById('ev-type').value,
+        event_date: document.getElementById('ev-date').value || null,
+        date_time: document.getElementById('ev-date-str').value || 'Upcoming Session',
+        mode: document.getElementById('ev-mode').value,
+        venue: document.getElementById('ev-venue').value || 'TBA',
+        is_paid: document.getElementById('ev-is-paid').value === 'true',
+        fee_amount: parseFloat(document.getElementById('ev-fee-amount').value) || 0,
+        max_participants: parseInt(document.getElementById('ev-max-participants').value, 10) || null,
+        status: document.getElementById('ev-status').value,
+        poster_url: document.getElementById('ev-poster-url').value,
+        short_description: document.getElementById('ev-short-desc').value,
+        full_description: document.getElementById('ev-full-desc').value
+      };
+
+      try {
+        const res = await fetch('/api/events/manage/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+          closeModal('modal-create-event');
+          showToast('Event created successfully.');
+          loadAdminEvents();
+        } else {
+          const err = await res.json();
+          alert('Error: ' + JSON.stringify(err));
+        }
+      } catch(err) {
+        alert('Event creation failed: ' + err);
+      }
+    }
+
+    async function updateEventStatus(id, newStatus) {
+      if(!confirm(`Change event status to ${newStatus}?`)) return;
+      try {
+        const res = await fetch(`/api/events/manage/${id}/`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if(res.ok) {
+          showToast(`Event status updated to ${newStatus}.`);
+          loadAdminEvents();
+        }
+      } catch(e) {
+        alert('Status update failed: ' + e);
+      }
+    }
+
+    // Dynamic Form Builder Logic
+    async function openEventFormBuilder(eventId, title) {
+      document.getElementById('builder-event-id').value = eventId;
+      document.getElementById('form-builder-title').textContent = `Form Builder: ${title}`;
+      openModal('modal-event-form-builder');
+      loadEventFields(eventId);
+    }
+
+    async function loadEventFields(eventId) {
+      const list = document.getElementById('builder-fields-list');
+      list.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Loading custom fields...</p>';
+      try {
+        const res = await fetch(`/api/events/manage/${eventId}/fields/`);
+        const fields = await res.json();
+        if(!fields.length) {
+          list.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">No custom fields configured. Only default contact fields will be required.</p>';
+          return;
+        }
+
+        list.innerHTML = '';
+        fields.forEach(f => {
+          const div = document.createElement('div');
+          div.style = 'display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--navy-card-border);border-radius:8px;';
+          div.innerHTML = `
+            <div>
+              <strong>${f.field_label}</strong> <small style="color:var(--cyan);">(${f.field_type})</small>
+              ${f.is_required ? '<span style="color:var(--rose);font-size:0.75rem;margin-left:6px;">Required</span>' : '<span style="color:var(--text-muted);font-size:0.75rem;margin-left:6px;">Optional</span>'}
+              ${f.options ? `<br><small style="color:var(--text-muted)">Options: ${f.options}</small>` : ''}
+            </div>
+            <button class="btn-danger" style="padding:4px 8px;font-size:0.75rem;" onclick="deleteFormField(${f.id}, ${eventId})">Delete</button>
+          `;
+          list.appendChild(div);
+        });
+      } catch(e) {
+        list.innerHTML = '<p style="color:var(--rose);">Failed to load fields.</p>';
+      }
+    }
+
+    async function submitAddFormField(e) {
+      e.preventDefault();
+      const eventId = document.getElementById('builder-event-id').value;
+      const payload = {
+        field_label: document.getElementById('new-fld-label').value,
+        field_type: document.getElementById('new-fld-type').value,
+        options: document.getElementById('new-fld-options').value,
+        is_required: true
+      };
+
+      try {
+        const res = await fetch(`/api/events/manage/${eventId}/fields/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+          document.getElementById('form-add-field').reset();
+          showToast('Field added to registration form.');
+          loadEventFields(eventId);
+        }
+      } catch(err) {
+        alert('Failed to add field: ' + err);
+      }
+    }
+
+    async function deleteFormField(fieldId, eventId) {
+      if(!confirm('Remove this field?')) return;
+      try {
+        const res = await fetch(`/api/events/manage/fields/${fieldId}/`, { method: 'DELETE' });
+        if(res.ok) {
+          showToast('Field removed.');
+          loadEventFields(eventId);
+        }
+      } catch(e) {
+        alert('Delete failed: ' + e);
+      }
+    }
+
+    async function notifyEventSubscribers(eventId, title) {
+      if(!confirm(`Send event notification email for "${title}" to all active subscribers?`)) return;
+      showToast('Sending notification emails to subscribers...');
+      try {
+        const res = await fetch(`/api/events/manage/${eventId}/notify-subscribers/`, { method: 'POST' });
+        const result = await res.json();
+        showToast(result.message || 'Notifications processed.');
+      } catch(e) {
+        alert('Notification job error: ' + e);
+      }
+    }
+
+    // Event Payments Dashboard Loader
+    async function loadEventPaymentsDashboard() {
+      const tbody = document.getElementById('event-payments-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading payments...</td></tr>';
+      try {
+        const res = await fetch('/api/events/payments/dashboard/');
+        const data = await res.json();
+        const k = data.kpis;
+
+        document.getElementById('ep-kpi-total-regs').textContent = k.total_registrations;
+        document.getElementById('ep-kpi-confirmed').textContent = k.confirmed_registrations;
+        document.getElementById('ep-kpi-paid-orders').textContent = k.successful_payments;
+        document.getElementById('ep-kpi-gross-rev').textContent = `₹${k.gross_received.toLocaleString('en-IN')}`;
+        document.getElementById('ep-kpi-subscribers').textContent = k.active_subscribers;
+
+        if(!data.recent_orders || !data.recent_orders.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">No payment orders recorded yet. Free events do not require payment.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        data.recent_orders.forEach(o => {
+          const tr = document.createElement('tr');
+          const statusClass = o.status === 'PAID' ? 'badge-qualified' : (o.status === 'FAILED' ? 'badge-rejected' : 'badge-new');
+          tr.innerHTML = `
+            <td><strong>${o.razorpay_order_id}</strong><br><small style="color:var(--text-muted)">${o.registration_ref || ''}</small></td>
+            <td>${o.event_title || 'Event'}</td>
+            <td><strong>₹${parseFloat(o.amount).toLocaleString('en-IN')}</strong> (${o.currency})</td>
+            <td><code>${o.razorpay_payment_id || 'Pending Gateway'}</code></td>
+            <td><span class="status-badge ${statusClass}">${o.status}</span></td>
+            <td><small>${new Date(o.created_at).toLocaleDateString()}</small></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--rose);">Failed to load payment dashboard.</td></tr>';
+      }
+    }
+
+    // Social Media & QR Code Management
+    async function loadSocialMediaConfig() {
+      const container = document.getElementById('social-config-container');
+      container.innerHTML = '<p style="color:var(--text-muted);">Loading social configurations...</p>';
+      try {
+        const res = await fetch('/api/social-links/manage/');
+        const configs = await res.json();
+        container.innerHTML = '';
+
+        configs.forEach(c => {
+          const card = document.createElement('div');
+          card.style = 'background:rgba(255,255,255,0.03);border:1px solid var(--navy-card-border);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:12px;';
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <h4 style="font-size:1.1rem;color:#fff;">${c.platform_name}</h4>
+              <label style="font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="social-public-${c.platform_key}" ${c.is_public ? 'checked' : ''}> Show on Footer
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label>Official Page URL</label>
+              <input type="url" id="social-url-${c.platform_key}" value="${c.platform_url || ''}" placeholder="https://${c.platform_name.toLowerCase()}.com/xeyrtechnologies">
+            </div>
+
+            <div class="form-group">
+              <label>Upload Genuine QR Code Graphic (PNG/JPG/SVG)</label>
+              <input type="file" id="social-qr-file-${c.platform_key}" accept="image/*" onchange="previewLocalQR(this, 'qr-preview-${c.platform_key}')">
+            </div>
+
+            <div style="text-align:center;padding:12px;background:rgba(0,0,0,0.3);border-radius:10px;">
+              <small style="color:var(--text-muted);display:block;margin-bottom:6px;">QR Code Live Preview</small>
+              <img id="qr-preview-${c.platform_key}" src="${c.qr_code_image || '/static/assets/xeyr-symbol.png'}" style="width:130px;height:130px;object-fit:contain;background:#fff;border-radius:8px;padding:6px;">
+            </div>
+
+            <button class="btn-primary" style="margin-top:auto;" onclick="saveSocialConfig('${c.platform_key}', '${c.platform_name}')">Save &amp; Update Footer</button>
+          `;
+          container.appendChild(card);
+        });
+      } catch(e) {
+        container.innerHTML = '<p style="color:var(--rose);">Failed to load social config.</p>';
+      }
+    }
+
+    function previewLocalQR(input, imgId) {
+      if(input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { document.getElementById(imgId).src = e.target.result; };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    async function saveSocialConfig(platformKey, platformName) {
+      const url = document.getElementById(`social-url-${platformKey}`).value;
+      const isPublic = document.getElementById(`social-public-${platformKey}`).checked;
+      const fileInput = document.getElementById(`social-qr-file-${platformKey}`);
+
+      const formData = new FormData();
+      formData.append('platform_key', platformKey);
+      formData.append('platform_name', platformName);
+      formData.append('platform_url', url);
+      formData.append('is_public', isPublic);
+      if(fileInput.files.length) {
+        formData.append('qr_code_image', fileInput.files[0]);
+      }
+
+      try {
+        const res = await fetch('/api/social-links/manage/', {
+          method: 'POST',
+          body: formData
+        });
+        if(res.ok) {
+          showToast(`Social config for ${platformName} updated.`);
+          loadSocialMediaConfig();
+        } else {
+          alert('Failed to save social configuration.');
+        }
+      } catch(e) {
+        alert('Save error: ' + e);
+      }
+    }
+
+    async function logoutAdmin() {
+      try {
+        const csrftoken = getCookie('csrftoken');
+        await fetch('/api/auth/logout/', {
+          method: 'POST',
+          headers: { ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}) }
+        });
+      } catch(e) {}
+      document.getElementById('auth-gate-overlay').style.display = 'flex';
+      showToast('You have been logged out securely.');
+    }
+  </script>
+</body>
+</html>
